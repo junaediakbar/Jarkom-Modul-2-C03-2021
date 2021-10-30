@@ -93,7 +93,7 @@ zone "franky.c03.com" {
         file "/etc/bind/kaizoku/franky.c03.com";
 };
 ```
-setelah membuat konfigurasi zone untuk franky.t12.com kami membuat direktori baru yaitu `/etc/bind/kaizoku` lalu menambahkan konfigurasi berikut ini pada `/etc/bind/kaizoku/franky.t12.com`
+setelah membuat konfigurasi zone untuk franky.c03.com kami membuat direktori baru yaitu `/etc/bind/kaizoku` lalu menambahkan konfigurasi berikut ini pada `/etc/bind/kaizoku/franky.c03.com`
 ```
 ;
 ; BIND data file for local loopback interface
