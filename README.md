@@ -112,7 +112,7 @@ Untuk membuat directory listing, kami menambahkan konfigurasi di /etc/apache2/si
   </Directory>
 ```
 #### Testing
-Apabila kita melakukan lynx ke www.super.franky.t12.com akan menampilkan directory listing.
+Apabila kita melakukan lynx ke www.super.franky.c03.com akan menampilkan directory listing.
  ```
  lynx www.super.franky.c03.com
  ```
@@ -144,7 +144,7 @@ Luffy juga meminta Nami untuk dibuatkan konfigurasi virtual host. Virtual host i
 #### Pada Skypie
 Edit konfigurasi pada /etc/apache2/sites-available/super.franky.c03.com.conf sebagai berikut
 ```
-  Alias "/js" "/var/www/super.franky.t12.com/public/js"
+  Alias "/js" "/var/www/super.franky.c03.com/public/js"
 ```
 Maksud dari Alias disini akan mentranslate direktori web `/js`menjadi `/public/js`
 #### Testing
@@ -156,17 +156,61 @@ Sehingga hasilnya akan sebagai berikut
 
 ### Nomor 14
 Dan Luffy meminta untuk web www.general.mecha.franky.yyy.com hanya bisa diakses dengan port 15000 dan port 15500
+#### Pada Skypie
+Masukkan port 15000 dan port 15500 pada file etc/apache2/sites-available/general.mecha.franky.c03.com.conf sebagai berikut
+```
+<VirtualHost *:15000 *:15500>
+	...
+	//ISINYA SAMA SEPERTI PORT 80 (Line 15 hingga 53)
+	...
+</VirtualHost>
+```
+Sehingga link web www.general.mecha.franky.yyy.com hanya akan bisa diakses dengan port 15000 dan port 15500
+
+#### Testing
+```
+  lynx general.mecha.franky.c03.com:15000
+```
+Berikut adalah hasilnya
+IMG-1
+IMG-2 <br>
+
+Sehingga perlu memasukkan username dan password untuk autentikasi yang akan dijelaskan pada nomor selanjutnya
 
 ### Nomor 15
 Dengan autentikasi username luffy dan password onepiece dan file di /var/www/general.mecha.franky.yyy
-
+#### Pada Skypie
+Jalankan perintah berikut
+```
+  htpasswd -b -c /var/www/general.mecha.franky.c03 luffy onepiece
+```
+Perintah tersebut berfungsi untuk mengatur basic authentication yang disimpan pada file `/var/www/general.mecha.franky.c03` dengan username luffy dan password onepiece
+#### Testing
+Lakukan lynx pada LogueTown 
+```
+lynx general.mecha.franky.c03.com:15000
+```
+![Belum Dimasukkan  username dan passwordnya]
+Selanjutnya kita akan diminta untuk mengetikkan username dan password, ketika benar maka akan menampilkan seperti berikut
+![Sudah dimasukkan username dan passwordnya]
 
 ### Nomor 16
 Dan setiap kali mengakses IP Skypie akan dialihkan secara otomatis ke www.franky.yyy.com
-
+#### Pada Skypie
+Pada file `/etc/apache2/sites-available/000-default.conf` tambahkan
+```
+redirect permanent / http://franky.c03.com
+```
+### Testing
+Jalankan lynx IP Address Skype
+```
+lynx 192.185.2.4
+```
+Maka akan langsung terbuka web www.franky.c03.com sebagai berikut
+![Hasil]
 ### Nomor 17
 Dikarenakan Franky juga ingin mengajak temannya untuk dapat menghubunginya melalui website www.super.franky.yyy.com, dan dikarenakan pengunjung web server pasti akan bingung dengan randomnya images yang ada, maka Franky juga meminta untuk mengganti request gambar yang memiliki substring “franky” akan diarahkan menuju franky.png
 
 
 ### Kendala Pengerjaan
-Pada saat awal pengerjaan sebenarnya sudah selesai semua tapi karena masih tidak tahu kami langsung melakukan export dan stop gns tanpa membuat shell script terlebih dahulu sehingga harus mengerjakan ulang dari awal
+Telah selesai mengerjakan namun yang telah didemokan hingga no 13, semoga bisa lebih baik kedepannya
