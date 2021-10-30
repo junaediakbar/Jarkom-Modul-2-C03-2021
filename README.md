@@ -120,21 +120,164 @@ ping franky.c03.com
 
 Setelah itu buat subdomain super.franky.yyy.com dengan alias www.super.franky.yyy.com yang diatur DNS nya di EniesLobby dan mengarah ke Skypie
 
+Cukup menambahkan subdomain baru di `/etc/bind/kaizoku/franky.c03.com` seperti berikut:
+
+```conf
+;
+; BIND data file for local loopback interface
+;
+\$TTL    604800
+@       IN      SOA     franky.c03.com. root.franky.c03.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@               IN      NS      franky.c03.com.
+@               IN      A       192.185.2.4 ; IP EniesLobby
+www             IN      CNAME   franky.c03.com.
+super           IN      A       192.185.2.4 ; IP Skypie
+www.super       IN      CNAME   super.franky.c03.com.
+```
+
+Untuk mengujinya dapat menggunakan `ping super.franky.c03.com` atau aliasnya `ping www.super.franky.c03.com`.
+
 ### Nomor 4
 
 Buat juga reverse domain untuk domain utama
+
+Pertama, tambahkan konfigurasi berikut pada `named.conf.local`:
+
+```conf
+zone \"2.185.192.in-addr.arpa\"{
+        type master;
+        file \"/etc/bind/kaizoku/2.185.192.in-addr.arpa\";
+};
+```
+
+Selanjutnya buat berkas baru `/etc/bind/kaizoku/2.185.192.in-addr.arpa` yang berisi seperti berikut:
+
+```conf
+;
+; BIND data file for local loopback interface
+;
+\$TTL    604800
+@       IN      SOA     franky.c03.com. root.franky.c03.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+2.185.192.in-addr.arpa. IN      NS      franky.c03.com.
+2                       IN      PTR     franky.c03.com.
+```
 
 ### Nomor 5
 
 Supaya tetap bisa menghubungi Franky jika server EniesLobby rusak, maka buat Water7 sebagai DNS Slave untuk domain utama
 
+Pertama, buka `/etc/bind/named.conf.options` dan komen `dnssec-validation auto;` lalu tambahkan `allow-query{any;};` setelahnya.
+
+```conf
+options {
+        directory \"/var/cache/bind\";
+
+        // If there is a firewall between you and nameservers you want
+        // to talk to, you may need to fix the firewall to allow multiple
+        // ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+        // If your ISP provided one or more IP addresses for stable 
+        // nameservers, you probably want to use them as forwarders.  
+        // Uncomment the following block, and insert the addresses replacing 
+        // the all-0's placeholder.
+
+        // forwarders {
+        //      0.0.0.0;
+        // };
+
+        //========================================================================
+        // If BIND logs error messages about the root key being expired,
+        // you will need to update your keys.  See https://www.isc.org/bind-keys
+        //========================================================================
+        //dnssec-validation auto;
+        allow-query{any;};
+        auth-nxdomain no;    # conform to RFC1035
+        listen-on-v6 { any; };
+};
+```
+
+Lalu pada `named.conf.local` pada zone franky tambahkan baris notify hingga allow transfer dengan IP menuju IP Water7
+
+```conf
+zone \"franky.c03.com\" {
+        type master;
+        notify yes;
+        also-notify { 192.185.2.3; }; // Masukan IP Water7 tanpa tanda petik
+        allow-transfer { 192.185.2.3; };
+        file \"/etc/bind/kaizoku/franky.c03.com\";
+};
+```
+
+Berikutnya beralih ke Water7, ubah `/etc/bind/named.conf.options` dengan perubahan yang sama. Berikutnya tambahkan konfigurasi berikut pada `named.conf.local`:
+
+```conf
+zone \"franky.c03.com\" {
+    type slave;
+    masters { 192.185.2.2; }; // Masukan IP EniesLobby tanpa tanda petik
+    file \"/var/lib/bind/franky.c03.com\";
+};
+```
+
 ### Nomor 6
 
 Setelah itu terdapat subdomain mecha.franky.yyy.com dengan alias www.mecha.franky.yyy.com yang didelegasikan dari EniesLobby ke Water7 dengan IP menuju ke Skypie dalam folder sunnygo
 
+Cukup tambahkan subdomain ns1 yang point ke Skypie dan mecha.franky.c03.com yang dipoint ke ns1 pada `/etc/bind/kaizoku/mecha.franky.c03.com`
+
+```conf
+ns1             IN      A       192.185.2.3 ;  IP Water7
+mecha           IN      NS      ns1
+```
+
+Pada water7 tambahkan sebagai berikut pada `/etc/bind/named.conf.local`:
+
+```conf
+zone \"mecha.franky.c03.com\" {
+        type master;
+        file \"/etc/bind/sunnygo/mecha.franky.c03.com\";
+};
+```
+
+Buka `/etc/bind/named.conf.options` dan komen `dnssec-validation auto;` lalu tambahkan `allow-query{any;};` setelahnya.
+
+Buat file baru `/etc/bind/sunnygo/mecha.franky.c03.com` yang berisi:
+
+```conf
+\$TTL    604800
+@       IN      SOA     mecha.franky.c03.com. root.mecha.franky.c03.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@               IN      NS      mecha.franky.c03.com.
+@               IN      A       192.185.2.4
+www             IN      CNAME   mecha.franky.c03.com.
+```
+
 ### Nomor 7
 
 Untuk memperlancar komunikasi Luffy dan rekannya, dibuatkan subdomain melalui Water7 dengan nama general.mecha.franky.yyy.com dengan alias www.general.mecha.franky.yyy.com yang mengarah ke Skypie
+
+Pada Water7, buka `/etc/bind/sunnygo/mecha.franky.c03.com` dan tambahkan ini dibawah:
+
+```conf
+general         IN      A       192.185.2.4
+www.general     IN      CNAME   general.mecha.franky.c03.com.
+```
 
 ### Nomor 8
 
