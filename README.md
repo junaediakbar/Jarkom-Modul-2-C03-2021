@@ -7,10 +7,112 @@ Nama Kelompok :
 ### Gambar Topologi
 
 ### Nomor 1
-EniesLobby akan dijadikan sebagai DNS Master, Water7 akan dijadikan DNS Slave, dan Skypie akan digunakan sebagai Web Server. Terdapat 2 Client yaitu Loguetown, dan Alabasta. Semua node terhubung pada router Foosha, sehingga dapat mengakses internet
+EniesLobby akan dijadikan sebagai DNS Master, Water7 akan dijadikan DNS Slave, dan Skypie akan digunakan sebagai Web Server. Terdapat 2 Client yaitu Loguetown, dan Alabasta. Semua node terhubung pada router Foosha, sehingga dapat mengakses internet.
+<br>
+Kami membuat topologi sesuai dengan Modul jarkom yang diberikan dengan melakukan konfigurasi untuk setiap node sebagai berikut  
+
+##### Konfigurasi Foosha
+```
+auto eth0
+iface eth0 inet dhcp
+
+auto eth1
+iface eth1 inet static
+	address 192.217.1.1
+	netmask 255.255.255.0
+
+auto eth2
+iface eth2 inet static
+	address 192.217.2.1
+	netmask 255.255.255.0
+```
+
+##### Konfigurasi Loguetown
+```
+auto eth0
+iface eth0 inet static
+	address 192.217.1.2
+	netmask 255.255.255.0
+	gateway 192.217.1.1
+```
+
+##### Konfigurasi Alabasta
+```
+auto eth0
+iface eth0 inet static
+	address 192.217.1.3
+	netmask 255.255.255.0
+	gateway 192.217.1.1
+```
+
+##### Konfigurasi EniesLobby
+```
+auto eth0
+iface eth0 inet static
+	address 192.217.2.2
+	netmask 255.255.255.0
+	gateway 192.217.2.1
+```
+
+##### Konfigurasi Water7
+```
+auto eth0
+iface eth0 inet static
+	address 192.217.2.3
+	netmask 255.255.255.0
+	gateway 192.217.2.1
+```
+
+##### Konfigurasi Skypie
+```
+auto eth0
+iface eth0 inet static
+	address 192.217.2.4
+	netmask 255.255.255.0
+	gateway 192.217.2.1
+```
+pada Foosha kami juga memasukkan command 
+```bash
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 192.185.0.0/16
+```
+lalu pada setiap node selain foosha kami memasukkan perintah
+```
+echo "nameserver 192.168.122.1" > /etc/resolv.conf
+```
 
 ### Nomor 2
 Luffy ingin menghubungi Franky yang berada di EniesLobby dengan denden mushi. Kalian diminta Luffy untuk membuat website utama dengan mengakses franky.yyy.com dengan alias www.franky.yyy.com pada folder kaizoku 
+<br>
+Dalam mengerjakan soal ini, pertama kami melakukan konfigurasi terhadap file `/etc/bind/named.conf.local` dengan menambahkan kode berikut ini
+```
+zone "franky.c03.com" {
+        type master;
+        file "/etc/bind/kaizoku/franky.c03.com";
+};
+```
+setelah membuat konfigurasi zone untuk franky.t12.com kami membuat direktori baru yaitu `/etc/bind/kaizoku` lalu menambahkan konfigurasi berikut ini pada `/etc/bind/kaizoku/franky.t12.com`
+```
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     franky.c03.com. root.franky.c03.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@               IN      NS      franky.c03.com.
+@               IN      A       192.185.2.4
+www             IN      CNAME   franky.c03.com.
+```
+Pada file konfigurasi diatas kami mengatur domain menjadi franky.c03.com yang mengarah ke skypie lalu membuat CNAME www untuk franky.c03.com
+<br>
+untuk testing sendiri kita menggunakan
+```
+ping franky.c03.com 
+```
 
 ### Nomor 3
 Setelah itu buat subdomain super.franky.yyy.com dengan alias www.super.franky.yyy.com yang diatur DNS nya di EniesLobby dan mengarah ke Skypie
