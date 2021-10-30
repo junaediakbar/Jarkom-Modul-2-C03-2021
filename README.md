@@ -4,7 +4,7 @@ Nama Kelompok :
 
 - Junaedi Akbar 05111940000041
 - Zydhan Linnar P.
-- M. Fajri D.C
+- M. Fajri Davyza Chaniago 05111940000180
 
 ### Gambar Topologi
 
